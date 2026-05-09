@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 
 const ProductForm = () => {
   const [step, setStep] = useState(1);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     verification: false,
     supplierName: '',
@@ -24,6 +25,10 @@ const ProductForm = () => {
 
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => s - 1);
+
+  const handleSubmit = () => {
+    setIsSubmitted(true);
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -385,10 +390,34 @@ const ProductForm = () => {
       
       <div className="button-group">
         <button className="btn-secondary" onClick={prevStep}>Back</button>
-        <button className="btn-primary" style={{ background: 'var(--success)' }}>Complete Submission</button>
+        <button className="btn-primary" style={{ background: 'var(--success)' }} onClick={handleSubmit}>Complete Submission</button>
       </div>
     </div>
   );
+
+  if (isSubmitted) {
+    return (
+      <div style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <header className="portal-header">
+          <h1 className="portal-logo">PlushMyRide</h1>
+          <p className="portal-subtitle">Supplier Management Portal</p>
+        </header>
+        <main className="form-container">
+          <div className="glass-card" style={{ textAlign: 'center', padding: '4rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', border: '2px solid var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ width: '40px', height: '40px' }}>
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <h2 className="step-title" style={{ marginBottom: '1rem', color: 'var(--success)' }}>Successfully Submitted!</h2>
+            <p className="step-desc" style={{ maxWidth: '400px', margin: '0 auto', fontSize: '1.1rem' }}>
+              Thank you for submitting your product details. Our team will review the information and get back to you shortly.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
