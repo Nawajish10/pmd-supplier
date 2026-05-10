@@ -538,11 +538,11 @@ const ProductForm = () => {
         </div>
       </header>
       
-      <div style={{ display: 'flex', gap: '2rem', width: '100%', maxWidth: products.length > 0 ? '1200px' : '640px', transition: 'max-width 0.3s ease' }}>
+      <div className={`main-layout ${products.length > 0 ? 'has-products' : ''}`}>
         {products.length > 0 && (
-          <aside style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', gap: '1rem', animation: 'stepFadeIn 0.4s ease-out' }}>
-            <h3 style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0, paddingLeft: '0.5rem' }}>Queued Products ({products.length})</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '600px', overflowY: 'auto', paddingRight: '0.5rem' }} className="sku-logic-scroll">
+          <aside className="sidebar-queue">
+            <h3 className="sidebar-title">Queued Products ({products.length})</h3>
+            <div className="sku-logic-scroll sidebar-list">
               {products.map((p, idx) => (
                 <div key={idx} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '1.25rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
