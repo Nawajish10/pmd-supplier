@@ -80,7 +80,7 @@ const ProductForm = () => {
       Timestamp: new Date().toLocaleString(),
       SupplierName: formData.supplierName,
       Email: formData.email,
-      Phone: formData.phone,
+      Phone: `+91 ${formData.phone}`,
       Products: allProducts.map(p => {
         const selectedSkus = Object.entries(p.skuDetails)
           .filter(([id, s]) => p.productType === 'PPF' ? true : s.selected)
@@ -143,7 +143,11 @@ const ProductForm = () => {
 
   const isStepValid = () => {
     if (step === 1) return formData.verification;
-    if (step === 2) return formData.supplierName.trim() && formData.phone.trim();
+    if (step === 2) {
+      const isEmailValid = formData.email ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) : false;
+      const isPhoneValid = formData.phone.length === 10;
+      return formData.supplierName.trim() && isEmailValid && isPhoneValid;
+    }
     if (step === 3) {
       if (!formData.brandName.trim() || !formData.productType) return false;
       if (formData.productType !== 'DIY' && formData.productType !== 'Coating' && (!formData.productName || !formData.productName.trim())) return false;
@@ -212,8 +216,26 @@ const ProductForm = () => {
       <header className="step-header"><h2 className="step-title">Supplier Information</h2><p className="step-desc">Provide your GST-registered company details exactly as they appear on your certificate.</p></header>
       <div className="form-group"><label className="form-label">Company Name <span style={{color:'var(--error)'}}>*</span></label><input name="supplierName" className="input-field" placeholder="e.g. PlushMyRide Distribution Pvt Ltd" value={formData.supplierName} onChange={handleInputChange} required /></div>
       <div className="form-grid">
-        <div className="form-group"><label className="form-label">Official Email</label><input type="email" name="email" className="input-field" placeholder="office@company.com" value={formData.email} onChange={handleInputChange} /></div>
-        <div className="form-group"><label className="form-label">Contact Number <span style={{color:'var(--error)'}}>*</span></label><input name="phone" className="input-field" placeholder="+91 98765 43210" value={formData.phone} onChange={handleInputChange} required /></div>
+        <div className="form-group"><label className="form-label">Official Email <span style={{color:'var(--error)'}}>*</span></label><input type="email" name="email" className="input-field" placeholder="office@company.com" value={formData.email} onChange={handleInputChange} required /></div>
+        <div className="form-group">
+          <label className="form-label">Contact Number <span style={{color:'var(--error)'}}>*</span></label>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <div style={{ position: 'absolute', left: '1.5rem', color: 'var(--text-secondary)', fontWeight: '600', pointerEvents: 'none' }}>+91</div>
+            <input 
+              type="tel" 
+              name="phone" 
+              className="input-field" 
+              style={{ paddingLeft: '3.5rem' }} 
+              placeholder="9876543210" 
+              value={formData.phone} 
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                if (val.length <= 10) handleInputChange({ target: { name: 'phone', type: 'text', checked: false, value: val } });
+              }} 
+              required 
+            />
+          </div>
+        </div>
       </div>
       <div className="button-group"><button className="btn-secondary" onClick={prevStep}>Back</button><button className="btn-primary" onClick={nextStep} disabled={!isStepValid()}>Continue</button></div>
     </div>
