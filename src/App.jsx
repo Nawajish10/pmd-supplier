@@ -227,10 +227,10 @@ const ProductForm = () => {
           </select>
         </div>
       </div>
-      {formData.productType !== 'DIY' && (
+      {formData.brandName.trim() !== '' && formData.productType !== '' && formData.productType !== 'DIY' && (
         <div className="form-group"><label className="form-label">Primary Product Name <span style={{color:'var(--error)'}}>*</span></label><input name="productName" className="input-field" placeholder="e.g. Crystal Shield Ultra Series" value={formData.productName} onChange={handleInputChange} required /></div>
       )}
-      {formData.productType === 'DIY' && (
+      {formData.brandName.trim() !== '' && formData.productType === 'DIY' && (
         <>
           <div className="form-group">
             <label className="form-label">DIY Product Type <span style={{color:'var(--error)'}}>*</span></label>
