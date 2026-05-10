@@ -371,24 +371,26 @@ const ProductForm = () => {
                         <div className="form-group" style={{ margin: 0 }}><label className="form-label">Price (₹) <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="₹" value={formData.skuDetails[`${formData.diyType}-${size}`]?.price || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'price', e.target.value)} required /></div>
                         <div className="form-group" style={{ margin: 0 }}><label className="form-label">Qty <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="Qty" value={formData.skuDetails[`${formData.diyType}-${size}`]?.qty || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'qty', e.target.value)} required /></div>
                       </div>
-                      <div className="form-grid" style={{ marginTop: '1rem' }}>
-                        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Measurement / Volume <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="text" placeholder="e.g. 20, 1" value={formData.skuDetails[`${formData.diyType}-${size}`]?.dimension || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'dimension', e.target.value)} required /></div>
-                        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Unit <span style={{color:'var(--error)'}}>*</span></label>
-                          <select className="input-field select-field" value={formData.skuDetails[`${formData.diyType}-${size}`]?.unit || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'unit', e.target.value)} required>
-                            <option value="">Select Unit</option>
-                            <option value="ml">ml</option>
-                            <option value="L">L</option>
-                            <option value="g">g</option>
-                            <option value="kg">kg</option>
-                            <option value="meter">meter</option>
-                            <option value="cm">cm</option>
-                            <option value="piece">piece</option>
-                            <option value="pack">pack</option>
-                            <option value="roll">roll</option>
-                            <option value="bottle">bottle</option>
-                          </select>
+                      {formData.diyType === 'Other' && (
+                        <div className="form-grid" style={{ marginTop: '1rem' }}>
+                          <div className="form-group" style={{ margin: 0 }}><label className="form-label">Measurement / Volume <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="text" placeholder="e.g. 20, 1" value={formData.skuDetails[`${formData.diyType}-${size}`]?.dimension || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'dimension', e.target.value)} required /></div>
+                          <div className="form-group" style={{ margin: 0 }}><label className="form-label">Unit <span style={{color:'var(--error)'}}>*</span></label>
+                            <select className="input-field select-field" value={formData.skuDetails[`${formData.diyType}-${size}`]?.unit || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'unit', e.target.value)} required>
+                              <option value="">Select Unit</option>
+                              <option value="ml">ml</option>
+                              <option value="L">L</option>
+                              <option value="g">g</option>
+                              <option value="kg">kg</option>
+                              <option value="meter">meter</option>
+                              <option value="cm">cm</option>
+                              <option value="piece">piece</option>
+                              <option value="pack">pack</option>
+                              <option value="roll">roll</option>
+                              <option value="bottle">bottle</option>
+                            </select>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>
