@@ -146,10 +146,13 @@ const ProductForm = () => {
     if (step === 2) return formData.supplierName.trim() && formData.phone.trim();
     if (step === 3) {
       if (!formData.brandName.trim() || !formData.productType) return false;
-      if (formData.productType !== 'DIY' && (!formData.productName || !formData.productName.trim())) return false;
+      if (formData.productType !== 'DIY' && formData.productType !== 'Coating' && (!formData.productName || !formData.productName.trim())) return false;
       if (formData.productType === 'DIY') {
         if (!formData.diyType) return false;
         if (formData.diyType === 'Other' && (!formData.diyTypeOther || !formData.diyTypeOther.trim())) return false;
+      }
+      if (formData.productType === 'Coating') {
+        if (!formData.coatingType) return false;
       }
       return true;
     }
@@ -227,7 +230,7 @@ const ProductForm = () => {
           </select>
         </div>
       </div>
-      {formData.brandName.trim() !== '' && formData.productType !== '' && formData.productType !== 'DIY' && (
+      {formData.brandName.trim() !== '' && formData.productType !== '' && formData.productType !== 'DIY' && formData.productType !== 'Coating' && (
         <div className="form-group"><label className="form-label">Primary Product Name <span style={{color:'var(--error)'}}>*</span></label><input name="productName" className="input-field" placeholder="e.g. Crystal Shield Ultra Series" value={formData.productName} onChange={handleInputChange} required /></div>
       )}
       {formData.brandName.trim() !== '' && formData.productType === 'DIY' && (
@@ -246,6 +249,17 @@ const ProductForm = () => {
             </div>
           )}
         </>
+      )}
+      {formData.brandName.trim() !== '' && formData.productType === 'Coating' && (
+        <div className="form-group">
+          <label className="form-label">Coating Type <span style={{color:'var(--error)'}}>*</span></label>
+          <select name="coatingType" className="input-field select-field" value={formData.coatingType} onChange={handleInputChange} required>
+            <option value="">Select Type</option>
+            <option>Ceramic</option>
+            <option>Graphene</option>
+            <option>Borophene</option>
+          </select>
+        </div>
       )}
       <div className="button-group"><button className="btn-secondary" onClick={prevStep}>Back</button><button className="btn-primary" onClick={nextStep} disabled={!isStepValid()}>Next: SKU Details</button></div>
     </div>
@@ -321,15 +335,6 @@ const ProductForm = () => {
 
         {formData.productType === 'Coating' && (
           <div>
-            <div className="form-group">
-              <label className="form-label">Coating Type</label>
-              <select name="coatingType" className="input-field select-field" value={formData.coatingType} onChange={handleInputChange}>
-                <option value="">Select Type</option>
-                <option>Ceramic</option>
-                <option>Graphene</option>
-                <option>Borophene</option>
-              </select>
-            </div>
             {['30ml', '50ml', '100ml'].map(size => (
               <div key={size} style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--card-border)', marginBottom: '1.25rem' }}>
                 <label className="custom-checkbox" style={{ padding: 0, margin: 0 }}>
