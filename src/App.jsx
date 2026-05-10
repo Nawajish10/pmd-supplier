@@ -104,7 +104,7 @@ const ProductForm = () => {
       Timestamp: new Date().toLocaleString(),
       SupplierName: formData.supplierName,
       Email: formData.email,
-      Phone: `+91 ${formData.phone}`,
+      Phone: `+91${formData.phone}`,
       Products: allProducts.map(p => {
         const selectedSkus = Object.entries(p.skuDetails)
           .filter(([id, s]) => p.productType === 'PPF' ? true : s.selected)
