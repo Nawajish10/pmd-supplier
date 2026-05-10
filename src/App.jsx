@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 const ProductForm = () => {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     verification: false,
     supplierName: '',
@@ -26,8 +27,46 @@ const ProductForm = () => {
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => s - 1);
 
-  const handleSubmit = () => {
-    setIsSubmitted(true);
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    
+    // Flatten selected SKUs into a readable string for Google Sheets
+    const selectedSkus = Object.entries(formData.skuDetails)
+      .filter(([_, s]) => s.selected)
+      .map(([id, s]) => `${id} (Price: ₹${s.price || 0}, Qty: ${s.qty || 0}${s.dimension ? `, Dim: ${s.dimension}` : ''})`)
+      .join(' | ');
+
+    const payload = {
+      Timestamp: new Date().toLocaleString(),
+      SupplierName: formData.supplierName,
+      Email: formData.email,
+      Phone: formData.phone,
+      BrandName: formData.brandName,
+      Category: formData.productType,
+      ProductName: formData.productName,
+      DIYType: formData.diyType || 'N/A',
+      CoatingType: formData.coatingType || 'N/A',
+      SKUDetails: selectedSkus,
+      TransitDays: formData.transitDays,
+      OOSDays: formData.oosDays
+    };
+
+    try {
+      const WEBHOOK_URL = "https://primary-production-e2862c.up.railway.app/webhook/pmd-supplier-data"; 
+      
+      await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error("Submission failed:", error);
+      alert("Failed to submit form. Please check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -390,7 +429,9 @@ const ProductForm = () => {
       
       <div className="button-group">
         <button className="btn-secondary" onClick={prevStep}>Back</button>
-        <button className="btn-primary" style={{ background: 'var(--success)' }} onClick={handleSubmit}>Complete Submission</button>
+        <button className="btn-primary" style={{ background: 'var(--success)' }} onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? 'Submitting...' : 'Complete Submission'}
+        </button>
       </div>
     </div>
   );
