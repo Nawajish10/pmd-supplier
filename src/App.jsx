@@ -90,13 +90,13 @@ const ProductForm = () => {
         return {
           BrandName: p.brandName,
           Category: p.productType,
-          ProductName: p.productName,
+          ProductName: p.productName || 'N/A',
           DIYType: p.diyType === 'Other' ? `Other: ${p.diyTypeOther}` : p.diyType || 'N/A',
           CoatingType: p.coatingType || 'N/A',
           SKUDetails: selectedSkus,
           StockStatus: p.stockStatus === 'in_stock' ? 'In Stock' : 'Out of Stock',
-          TransitDays: p.stockStatus === 'in_stock' ? p.transitDays : 'N/A',
-          ProcurementDays: p.stockStatus === 'out_of_stock' ? p.oosDays : 'N/A'
+          TransitDays: p.stockStatus === 'in_stock' ? (p.transitDays || '-') : '-',
+          OOSDays: p.stockStatus === 'out_of_stock' ? (p.oosDays || '-') : '-'
         };
       })
     };
