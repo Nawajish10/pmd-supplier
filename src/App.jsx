@@ -83,8 +83,8 @@ const ProductForm = () => {
       Phone: formData.phone,
       Products: allProducts.map(p => {
         const selectedSkus = Object.entries(p.skuDetails)
-          .filter(([_, s]) => s.selected)
-          .map(([id, s]) => `${id} (Price: ₹${s.price || 0}, Qty: ${s.qty || 0}${s.dimension ? `, Dim: ${s.dimension}${s.unit ? ' ' + s.unit : ''}` : ''}${s.length ? `, Dim: ${s.length}${s.lengthUnit} x ${s.width}${s.widthUnit}` : ''}${s.packageType ? `, Pkg: ${s.packageType}` : ''})`)
+          .filter(([id, s]) => id === 'PPF-Roll' ? s.selected !== false : s.selected)
+          .map(([id, s]) => `${id} (Price: ₹${s.price || 0}, Qty: ${s.qty || 0}${s.dimension ? `, Dim: ${s.dimension}${s.unit ? ' ' + s.unit : ''}` : ''}${s.length ? `, Dim: ${s.length}${s.lengthUnit || ''} x ${s.width || ''}${s.widthUnit || ''}` : ''}${s.packageType ? `, Pkg: ${s.packageType}` : ''})`)
           .join(' | ');
 
         return {
@@ -157,6 +157,11 @@ const ProductForm = () => {
       return true;
     }
     if (step === 4) {
+      if (formData.productType === 'PPF') {
+        const ppf = formData.skuDetails['PPF-Roll'];
+        if (!ppf || ppf.selected === false) return false;
+        return !!(ppf.price && ppf.qty);
+      }
       const selectedSkus = Object.entries(formData.skuDetails).filter(([_, s]) => s.selected);
       if (selectedSkus.length === 0) return false;
       return selectedSkus.every(([_, s]) => s.price && s.qty);
@@ -411,7 +416,7 @@ const ProductForm = () => {
 
       <div className="button-group">
         <button className="btn-secondary" onClick={prevStep}>Back</button>
-        <button className="btn-primary" onClick={nextStep}>Next: Media & Logistics</button>
+        <button className="btn-primary" onClick={nextStep} disabled={!isStepValid()}>Next: Media & Logistics</button>
       </div>
     </div>
   );
