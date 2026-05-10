@@ -139,7 +139,15 @@ const ProductForm = () => {
   const isStepValid = () => {
     if (step === 1) return formData.verification;
     if (step === 2) return formData.supplierName.trim() && formData.phone.trim();
-    if (step === 3) return formData.brandName.trim() && formData.productType && formData.productName.trim();
+    if (step === 3) {
+      if (!formData.brandName.trim() || !formData.productType) return false;
+      if (formData.productType !== 'DIY' && (!formData.productName || !formData.productName.trim())) return false;
+      if (formData.productType === 'DIY') {
+        if (!formData.diyType) return false;
+        if (formData.diyType === 'Other' && (!formData.diyTypeOther || !formData.diyTypeOther.trim())) return false;
+      }
+      return true;
+    }
     if (step === 4) {
       const selectedSkus = Object.entries(formData.skuDetails).filter(([_, s]) => s.selected);
       if (selectedSkus.length === 0) return false;
@@ -214,7 +222,26 @@ const ProductForm = () => {
           </select>
         </div>
       </div>
-      <div className="form-group"><label className="form-label">Primary Product Name <span style={{color:'var(--error)'}}>*</span></label><input name="productName" className="input-field" placeholder="e.g. Crystal Shield Ultra Series" value={formData.productName} onChange={handleInputChange} required /></div>
+      {formData.productType !== 'DIY' && (
+        <div className="form-group"><label className="form-label">Primary Product Name <span style={{color:'var(--error)'}}>*</span></label><input name="productName" className="input-field" placeholder="e.g. Crystal Shield Ultra Series" value={formData.productName} onChange={handleInputChange} required /></div>
+      )}
+      {formData.productType === 'DIY' && (
+        <>
+          <div className="form-group">
+            <label className="form-label">DIY Product Type <span style={{color:'var(--error)'}}>*</span></label>
+            <select name="diyType" className="input-field select-field" value={formData.diyType} onChange={handleInputChange} required>
+              <option value="">Select Type</option>
+              {['Car Shampoo', 'Car Wax / Polish (Liquid)', 'Car Wax / Polish (Solid)', 'Glass Cleaner', 'Tyre Shine', 'Dashboard Dresser', 'Quick Detailer', 'Wheel Cleaner', 'Interior Cleaner', 'Tar Remover', 'Leather Conditioner', 'Trim Restorer', 'Microfibre Cloth', 'Clay Bar', 'Foam Mitt', 'Detailing Brush', 'Applicator Pad', 'Engine Degreaser', 'Fabric Protectant', 'Headlight Kit', 'Ceramic DIY Kit', 'Other'].map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          {formData.diyType === 'Other' && (
+            <div className="form-group" style={{ marginTop: '1.5rem' }}>
+              <label className="form-label">Specify DIY Type <span style={{color:'var(--error)'}}>*</span></label>
+              <textarea name="diyTypeOther" className="input-field" placeholder="Describe the DIY product..." value={formData.diyTypeOther} onChange={handleInputChange} style={{ height: '80px', paddingTop: '1rem', resize: 'vertical' }} required></textarea>
+            </div>
+          )}
+        </>
+      )}
       <div className="button-group"><button className="btn-secondary" onClick={prevStep}>Back</button><button className="btn-primary" onClick={nextStep} disabled={!isStepValid()}>Next: SKU Details</button></div>
     </div>
   );
@@ -321,19 +348,6 @@ const ProductForm = () => {
 
         {formData.productType === 'DIY' && (
           <div>
-            <div className="form-group">
-              <label className="form-label">DIY Product Type</label>
-              <select name="diyType" className="input-field select-field" value={formData.diyType} onChange={handleInputChange}>
-                <option value="">Select Type</option>
-                {['Car Shampoo', 'Car Wax / Polish (Liquid)', 'Car Wax / Polish (Solid)', 'Glass Cleaner', 'Tyre Shine', 'Dashboard Dresser', 'Quick Detailer', 'Wheel Cleaner', 'Interior Cleaner', 'Tar Remover', 'Leather Conditioner', 'Trim Restorer', 'Microfibre Cloth', 'Clay Bar', 'Foam Mitt', 'Detailing Brush', 'Applicator Pad', 'Engine Degreaser', 'Fabric Protectant', 'Headlight Kit', 'Ceramic DIY Kit', 'Other'].map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            {formData.diyType === 'Other' && (
-              <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                <label className="form-label">Specify DIY Type <span style={{color:'var(--error)'}}>*</span></label>
-                <textarea name="diyTypeOther" className="input-field" placeholder="Describe the DIY product..." value={formData.diyTypeOther} onChange={handleInputChange} style={{ height: '80px', paddingTop: '1rem', resize: 'vertical' }} required></textarea>
-              </div>
-            )}
             {formData.diyType && (() => {
               let sizes = ['100ml', '250ml', '500ml', '750ml', '1L', '5L'];
               if (formData.diyType === 'Microfibre Cloth') sizes = ['1 Piece', '3 Pack', '5 Pack', '10 Pack', 'Other Pack'];
