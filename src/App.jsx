@@ -17,7 +17,8 @@ const ProductForm = () => {
     transitDays: '',
     oosDays: '',
     skuDetails: {},
-    diyTypeOther: ''
+    diyTypeOther: '',
+    stockStatus: 'in_stock'
   });
 
   const nextStep = () => setStep(s => s + 1);
@@ -32,6 +33,7 @@ const ProductForm = () => {
       diyTypeOther: formData.diyTypeOther,
       coatingType: formData.coatingType,
       skuDetails: formData.skuDetails,
+      stockStatus: formData.stockStatus,
       transitDays: formData.transitDays,
       oosDays: formData.oosDays
     };
@@ -49,7 +51,8 @@ const ProductForm = () => {
       skuDetails: {},
       diyType: '',
       diyTypeOther: '',
-      coatingType: ''
+      coatingType: '',
+      stockStatus: 'in_stock'
     }));
     
     setStep(3); // Go back to Product Identity
@@ -66,6 +69,7 @@ const ProductForm = () => {
       diyTypeOther: formData.diyTypeOther,
       coatingType: formData.coatingType,
       skuDetails: formData.skuDetails,
+      stockStatus: formData.stockStatus,
       transitDays: formData.transitDays,
       oosDays: formData.oosDays
     };
@@ -90,8 +94,9 @@ const ProductForm = () => {
           DIYType: p.diyType === 'Other' ? `Other: ${p.diyTypeOther}` : p.diyType || 'N/A',
           CoatingType: p.coatingType || 'N/A',
           SKUDetails: selectedSkus,
-          TransitDays: p.transitDays,
-          OOSDays: p.oosDays
+          StockStatus: p.stockStatus === 'in_stock' ? 'In Stock' : 'Out of Stock',
+          TransitDays: p.stockStatus === 'in_stock' ? p.transitDays : 'N/A',
+          ProcurementDays: p.stockStatus === 'out_of_stock' ? p.oosDays : 'N/A'
         };
       })
     };
@@ -404,19 +409,31 @@ const ProductForm = () => {
     <div className="form-section">
       <header className="step-header"><h2 className="step-title">Logistics</h2><p className="step-desc">Finalize the submission with transit and procurement timelines.</p></header>
       
+      <div className="form-group">
+        <label className="form-label">Product Availability <span style={{color:'var(--error)'}}>*</span></label>
+        <select name="stockStatus" className="input-field select-field" value={formData.stockStatus} onChange={handleInputChange} required>
+          <option value="in_stock">In Stock</option>
+          <option value="out_of_stock">Out of Stock</option>
+        </select>
+      </div>
+
       <div className="form-grid">
-        <div className="form-group">
-          <label className="form-label">
-            Transit (In Stock) <Tooltip title="Transit Timeline" desc="Days to deliver if product is currently in your stock." />
-          </label>
-          <input type="number" name="transitDays" className="input-field" placeholder="Days" value={formData.transitDays} onChange={handleInputChange} />
-        </div>
-        <div className="form-group">
-          <label className="form-label">
-            Procurement (OOS) <Tooltip title="Backorder Timeline" desc="Days to procure from manufacturer and deliver if OOS." />
-          </label>
-          <input type="number" name="oosDays" className="input-field" placeholder="Days" value={formData.oosDays} onChange={handleInputChange} />
-        </div>
+        {formData.stockStatus === 'in_stock' && (
+          <div className="form-group">
+            <label className="form-label">
+              Transit (In Stock) <Tooltip title="Transit Timeline" desc="Days to deliver since product is currently in your stock." />
+            </label>
+            <input type="number" name="transitDays" className="input-field" placeholder="Days" value={formData.transitDays} onChange={handleInputChange} />
+          </div>
+        )}
+        {formData.stockStatus === 'out_of_stock' && (
+          <div className="form-group">
+            <label className="form-label">
+              Procurement (Out of Stock) <Tooltip title="Backorder Timeline" desc="Days to procure from manufacturer and deliver if out of stock." />
+            </label>
+            <input type="number" name="oosDays" className="input-field" placeholder="Days" value={formData.oosDays} onChange={handleInputChange} />
+          </div>
+        )}
       </div>
       
       <div className="button-group" style={{ flexDirection: 'column', gap: '1rem' }}>
