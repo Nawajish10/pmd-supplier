@@ -559,6 +559,90 @@ input:checked + .checkbox-visual svg {
   padding-right: 0.5rem;
 }
 
+/* Modal Overlay Styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-container {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 760px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-header {
+  padding: 1.5rem 2.5rem;
+  border-bottom: 1px solid var(--card-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.modal-body {
+  padding: 2.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 1.5rem 2.5rem;
+  border-top: 1px solid var(--card-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* Responsive Breakpoints */
 @media (max-width: 1024px) {
   .main-layout.has-products {
@@ -614,6 +698,23 @@ input:checked + .checkbox-visual svg {
   
   .step-title { font-size: 1.5rem; }
   .step-desc { font-size: 0.95rem; }
+
+  /* Mobile Bottom Sheet Modal */
+  .modal-container {
+    max-height: 95vh;
+    border-radius: 24px 24px 0 0;
+    margin-top: auto;
+  }
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .modal-body {
+    padding: 1.5rem;
+  }
+  .modal-header, .modal-footer {
+    padding: 1.25rem 1.5rem;
+  }
 }
 
 @media (max-width: 480px) {

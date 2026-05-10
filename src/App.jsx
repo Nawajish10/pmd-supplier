@@ -5,6 +5,27 @@ const ProductForm = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [products, setProducts] = useState([]);
+  const [editingProductIndex, setEditingProductIndex] = useState(null);
+  const [editFormData, setEditFormData] = useState(null);
+
+  const handleEditInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleEditSkuChange = (skuId, field, value) => {
+    setEditFormData(prev => ({
+      ...prev,
+      skuDetails: { ...prev.skuDetails, [skuId]: { ...(prev.skuDetails[skuId] || {}), [field]: value } }
+    }));
+  };
+
+  const saveEditedProduct = () => {
+    setProducts(prev => prev.map((p, i) => i === editingProductIndex ? { ...editFormData } : p));
+    setEditingProductIndex(null);
+    setEditFormData(null);
+  };
+
   const [formData, setFormData] = useState({
     verification: false,
     supplierName: '',
@@ -59,27 +80,8 @@ const ProductForm = () => {
   };
 
   const handleEditProduct = (index) => {
-    const productToEdit = products[index];
-    if (formData.brandName.trim() !== '') {
-      if (!window.confirm("You have unsaved changes for the current product. Are you sure you want to edit a queued product? Your current progress will be lost.")) {
-        return;
-      }
-    }
-    setFormData(prev => ({
-      ...prev,
-      brandName: productToEdit.brandName,
-      productType: productToEdit.productType,
-      productName: productToEdit.productName,
-      diyType: productToEdit.diyType,
-      diyTypeOther: productToEdit.diyTypeOther,
-      coatingType: productToEdit.coatingType,
-      skuDetails: productToEdit.skuDetails,
-      stockStatus: productToEdit.stockStatus,
-      transitDays: productToEdit.transitDays,
-      oosDays: productToEdit.oosDays
-    }));
-    setProducts(prev => prev.filter((_, i) => i !== index));
-    setStep(3);
+    setEditingProductIndex(index);
+    setEditFormData(products[index]);
   };
 
   const handleSubmit = async () => {
@@ -265,14 +267,14 @@ const ProductForm = () => {
     </div>
   );
 
-  const renderProductIdentification = () => (
+  const renderProductIdentification = (state = formData, onChange = handleInputChange, isModal = false) => (
     <div className="form-section">
       <header className="step-header"><h2 className="step-title">Product Identity</h2><p className="step-desc">Select the category and define the primary brand identity of the product.</p></header>
       <div className="form-grid">
-        <div className="form-group"><label className="form-label">Brand Name <span style={{color:'var(--error)'}}>*</span></label><input name="brandName" className="input-field" placeholder="3M, Garware, Avery, etc." value={formData.brandName} onChange={handleInputChange} required /></div>
+        <div className="form-group"><label className="form-label">Brand Name <span style={{color:'var(--error)'}}>*</span></label><input name="brandName" className="input-field" placeholder="3M, Garware, Avery, etc." value={state.brandName} onChange={onChange} required /></div>
         <div className="form-group">
           <label className="form-label">Category <span style={{color:'var(--error)'}}>*</span></label>
-          <select name="productType" className="input-field select-field" value={formData.productType} onChange={handleInputChange} required>
+          <select name="productType" className="input-field select-field" value={state.productType} onChange={onChange} required>
             <option value="">Select Category</option>
             <option value="PPF">PPF</option>
             <option value="Sunfilm">Sunfilm</option>
@@ -281,30 +283,30 @@ const ProductForm = () => {
           </select>
         </div>
       </div>
-      {formData.brandName.trim() !== '' && formData.productType !== '' && formData.productType !== 'DIY' && formData.productType !== 'Coating' && (
-        <div className="form-group"><label className="form-label">Primary Product Name <span style={{color:'var(--error)'}}>*</span></label><input name="productName" className="input-field" placeholder="e.g. Crystal Shield Ultra Series" value={formData.productName} onChange={handleInputChange} required /></div>
+      {state.brandName.trim() !== '' && state.productType !== '' && state.productType !== 'DIY' && state.productType !== 'Coating' && (
+        <div className="form-group"><label className="form-label">Primary Product Name <span style={{color:'var(--error)'}}>*</span></label><input name="productName" className="input-field" placeholder="e.g. Crystal Shield Ultra Series" value={state.productName} onChange={onChange} required /></div>
       )}
-      {formData.brandName.trim() !== '' && formData.productType === 'DIY' && (
+      {state.brandName.trim() !== '' && state.productType === 'DIY' && (
         <>
           <div className="form-group">
             <label className="form-label">DIY Product Type <span style={{color:'var(--error)'}}>*</span></label>
-            <select name="diyType" className="input-field select-field" value={formData.diyType} onChange={handleInputChange} required>
+            <select name="diyType" className="input-field select-field" value={state.diyType} onChange={onChange} required>
               <option value="">Select Type</option>
               {['Car Shampoo', 'Car Wax / Polish (Liquid)', 'Car Wax / Polish (Solid)', 'Glass Cleaner', 'Tyre Shine', 'Dashboard Dresser', 'Quick Detailer', 'Wheel Cleaner', 'Interior Cleaner', 'Tar Remover', 'Leather Conditioner', 'Trim Restorer', 'Microfibre Cloth', 'Clay Bar', 'Foam Mitt', 'Detailing Brush', 'Applicator Pad', 'Engine Degreaser', 'Fabric Protectant', 'Headlight Kit', 'Ceramic DIY Kit', 'Other'].map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
-          {formData.diyType === 'Other' && (
+          {state.diyType === 'Other' && (
             <div className="form-group" style={{ marginTop: '1.5rem' }}>
               <label className="form-label">Specify DIY Type <span style={{color:'var(--error)'}}>*</span></label>
-              <textarea name="diyTypeOther" className="input-field" placeholder="Describe the DIY product..." value={formData.diyTypeOther} onChange={handleInputChange} style={{ height: '80px', paddingTop: '1rem', resize: 'vertical' }} required></textarea>
+              <textarea name="diyTypeOther" className="input-field" placeholder="Describe the DIY product..." value={state.diyTypeOther} onChange={onChange} style={{ height: '80px', paddingTop: '1rem', resize: 'vertical' }} required></textarea>
             </div>
           )}
         </>
       )}
-      {formData.brandName.trim() !== '' && formData.productType === 'Coating' && (
+      {state.brandName.trim() !== '' && state.productType === 'Coating' && (
         <div className="form-group">
           <label className="form-label">Coating Type <span style={{color:'var(--error)'}}>*</span></label>
-          <select name="coatingType" className="input-field select-field" value={formData.coatingType} onChange={handleInputChange} required>
+          <select name="coatingType" className="input-field select-field" value={state.coatingType} onChange={onChange} required>
             <option value="">Select Type</option>
             <option>Ceramic</option>
             <option>Graphene</option>
@@ -312,38 +314,40 @@ const ProductForm = () => {
           </select>
         </div>
       )}
-      <div className="button-group"><button className="btn-secondary" onClick={prevStep}>Back</button><button className="btn-primary" onClick={nextStep} disabled={!isStepValid()}>Next: SKU Details</button></div>
+      {!isModal && (
+        <div className="button-group"><button className="btn-secondary" onClick={prevStep}>Back</button><button className="btn-primary" onClick={nextStep} disabled={!isStepValid()}>Next: SKU Details</button></div>
+      )}
     </div>
   );
 
-  const renderSKUDetails = () => (
+  const renderSKUDetails = (state = formData, setState = setFormData, onSkuChange = handleSkuChange, isModal = false) => (
     <div className="form-section">
       <header className="step-header">
-        <h2 className="step-title">{formData.productType} SKU Configuration</h2>
+        <h2 className="step-title">{state.productType} SKU Configuration</h2>
         <p className="step-desc">Define exact specifications, dimensions, and variants for your product line.</p>
       </header>
 
       <div className="sku-logic-scroll" style={{ maxHeight: '480px', overflowY: 'auto', paddingRight: '1rem', marginBottom: '1.5rem' }}>
         
-        {formData.productType === 'PPF' && (
+        {state.productType === 'PPF' && (
           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--card-border)' }}>
             <h3 style={{ margin: '0 0 1.5rem 0', color: '#fff', fontSize: '1.25rem' }}>Full Roll Configuration</h3>
             <div className="form-grid">
-              <div className="form-group"><label className="form-label">Length</label><input className="input-field" type="number" placeholder="Value" value={formData.skuDetails['PPF-Roll']?.length || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'length', e.target.value)} /></div>
-              <div className="form-group"><label className="form-label">Unit</label><select className="input-field select-field" value={formData.skuDetails['PPF-Roll']?.lengthUnit || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'lengthUnit', e.target.value)}><option value="">Select</option>{units.map(u => <option key={u} value={u}>{u}</option>)}</select></div>
+              <div className="form-group"><label className="form-label">Length</label><input className="input-field" type="number" placeholder="Value" value={state.skuDetails['PPF-Roll']?.length || ''} onChange={(e) => onSkuChange('PPF-Roll', 'length', e.target.value)} /></div>
+              <div className="form-group"><label className="form-label">Unit</label><select className="input-field select-field" value={state.skuDetails['PPF-Roll']?.lengthUnit || ''} onChange={(e) => onSkuChange('PPF-Roll', 'lengthUnit', e.target.value)}><option value="">Select</option>{units.map(u => <option key={u} value={u}>{u}</option>)}</select></div>
             </div>
             <div className="form-grid">
-              <div className="form-group"><label className="form-label">Width</label><input className="input-field" type="number" placeholder="Value" value={formData.skuDetails['PPF-Roll']?.width || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'width', e.target.value)} /></div>
-              <div className="form-group"><label className="form-label">Unit</label><select className="input-field select-field" value={formData.skuDetails['PPF-Roll']?.widthUnit || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'widthUnit', e.target.value)}><option value="">Select</option>{units.map(u => <option key={u} value={u}>{u}</option>)}</select></div>
+              <div className="form-group"><label className="form-label">Width</label><input className="input-field" type="number" placeholder="Value" value={state.skuDetails['PPF-Roll']?.width || ''} onChange={(e) => onSkuChange('PPF-Roll', 'width', e.target.value)} /></div>
+              <div className="form-group"><label className="form-label">Unit</label><select className="input-field select-field" value={state.skuDetails['PPF-Roll']?.widthUnit || ''} onChange={(e) => onSkuChange('PPF-Roll', 'widthUnit', e.target.value)}><option value="">Select</option>{units.map(u => <option key={u} value={u}>{u}</option>)}</select></div>
             </div>
             <div className="form-grid">
-              <div className="form-group"><label className="form-label">Price to PMD (₹) <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="₹" value={formData.skuDetails['PPF-Roll']?.price || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'price', e.target.value)} required /></div>
-              <div className="form-group"><label className="form-label">Qty in Stock <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="Qty" value={formData.skuDetails['PPF-Roll']?.qty || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'qty', e.target.value)} required /></div>
+              <div className="form-group"><label className="form-label">Price to PMD (₹) <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="₹" value={state.skuDetails['PPF-Roll']?.price || ''} onChange={(e) => onSkuChange('PPF-Roll', 'price', e.target.value)} required /></div>
+              <div className="form-group"><label className="form-label">Qty in Stock <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="Qty" value={state.skuDetails['PPF-Roll']?.qty || ''} onChange={(e) => onSkuChange('PPF-Roll', 'qty', e.target.value)} required /></div>
             </div>
           </div>
         )}
 
-        {formData.productType === 'Sunfilm' && (
+        {state.productType === 'Sunfilm' && (
           <div>
             {[
               { id: 'fullRoll', label: 'Full Roll', hasDim: true },
@@ -356,22 +360,22 @@ const ProductForm = () => {
             ].map(sku => (
               <div key={sku.id} style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--card-border)', marginBottom: '1.25rem' }}>
                 <label className="custom-checkbox" style={{ padding: 0, margin: 0 }}>
-                  <input type="checkbox" style={{ display: 'none' }} checked={formData.skuDetails[sku.id]?.selected} onChange={(e) => setFormData(prev => ({ ...prev, skuDetails: { ...prev.skuDetails, [sku.id]: { selected: e.target.checked } } }))} />
+                  <input type="checkbox" style={{ display: 'none' }} checked={state.skuDetails[sku.id]?.selected} onChange={(e) => setState(prev => ({ ...prev, skuDetails: { ...prev.skuDetails, [sku.id]: { selected: e.target.checked } } }))} />
                   <div className="checkbox-visual"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
                   <span className="checkbox-label" style={{ fontWeight: 700, color: '#fff' }}>{sku.label}</span>
                 </label>
-                {formData.skuDetails[sku.id]?.selected && (
+                {state.skuDetails[sku.id]?.selected && (
                   <div style={{ marginTop: '1.25rem', borderTop: '1px solid var(--card-border)', paddingTop: '1.25rem' }}>
                     {sku.info && <p style={{ color: 'var(--accent-cyan)', fontSize: '0.8rem', marginBottom: '1rem', fontWeight: 600 }}>ⓘ {sku.info}</p>}
                     {sku.hasDim && (
                       <div className="form-grid">
-                        <div className="form-group"><label className="form-label">Dimensions</label><div style={{ display: 'flex', gap: '0.75rem' }}><input className="input-field" type="number" placeholder="L" value={formData.skuDetails[sku.id]?.length || ''} onChange={(e) => handleSkuChange(sku.id, 'length', e.target.value)} /><input className="input-field" type="number" placeholder="W" value={formData.skuDetails[sku.id]?.width || ''} onChange={(e) => handleSkuChange(sku.id, 'width', e.target.value)} /></div></div>
-                        <div className="form-group"><label className="form-label">Unit</label><select className="input-field select-field" value={formData.skuDetails[sku.id]?.unit || ''} onChange={(e) => handleSkuChange(sku.id, 'unit', e.target.value)}><option value="">Select</option>{units.map(u => <option key={u} value={u}>{u}</option>)}</select></div>
+                        <div className="form-group"><label className="form-label">Dimensions</label><div style={{ display: 'flex', gap: '0.75rem' }}><input className="input-field" type="number" placeholder="L" value={state.skuDetails[sku.id]?.length || ''} onChange={(e) => onSkuChange(sku.id, 'length', e.target.value)} /><input className="input-field" type="number" placeholder="W" value={state.skuDetails[sku.id]?.width || ''} onChange={(e) => onSkuChange(sku.id, 'width', e.target.value)} /></div></div>
+                        <div className="form-group"><label className="form-label">Unit</label><select className="input-field select-field" value={state.skuDetails[sku.id]?.unit || ''} onChange={(e) => onSkuChange(sku.id, 'unit', e.target.value)}><option value="">Select</option>{units.map(u => <option key={u} value={u}>{u}</option>)}</select></div>
                       </div>
                     )}
                     <div className="form-grid">
-                      <div className="form-group"><label className="form-label">Price (₹) <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="₹" value={formData.skuDetails[sku.id]?.price || ''} onChange={(e) => handleSkuChange(sku.id, 'price', e.target.value)} required /></div>
-                      <div className="form-group"><label className="form-label">Qty <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="Stock" value={formData.skuDetails[sku.id]?.qty || ''} onChange={(e) => handleSkuChange(sku.id, 'qty', e.target.value)} required /></div>
+                      <div className="form-group"><label className="form-label">Price (₹) <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="₹" value={state.skuDetails[sku.id]?.price || ''} onChange={(e) => onSkuChange(sku.id, 'price', e.target.value)} required /></div>
+                      <div className="form-group"><label className="form-label">Qty <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="Stock" value={state.skuDetails[sku.id]?.qty || ''} onChange={(e) => onSkuChange(sku.id, 'qty', e.target.value)} required /></div>
                     </div>
                   </div>
                 )}
@@ -380,21 +384,21 @@ const ProductForm = () => {
           </div>
         )}
 
-        {formData.productType === 'Coating' && (
+        {state.productType === 'Coating' && (
           <div>
             {['30ml', '50ml', '100ml'].map(size => (
               <div key={size} style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--card-border)', marginBottom: '1.25rem' }}>
                 <label className="custom-checkbox" style={{ padding: 0, margin: 0 }}>
-                  <input type="checkbox" style={{ display: 'none' }} checked={formData.skuDetails[size]?.selected} onChange={(e) => setFormData(prev => ({ ...prev, skuDetails: { ...prev.skuDetails, [size]: { selected: e.target.checked } } }))} />
+                  <input type="checkbox" style={{ display: 'none' }} checked={state.skuDetails[size]?.selected} onChange={(e) => setState(prev => ({ ...prev, skuDetails: { ...prev.skuDetails, [size]: { selected: e.target.checked } } }))} />
                   <div className="checkbox-visual"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
                   <span className="checkbox-label" style={{ fontWeight: 700, color: '#fff' }}>{size} Variant</span>
                 </label>
-                {formData.skuDetails[size]?.selected && (
+                {state.skuDetails[size]?.selected && (
                   <div style={{ marginTop: '1.25rem' }}>
-                    <div className="form-group"><label className="form-label">Package Type</label><select className="input-field select-field" value={formData.skuDetails[size]?.packageType || ''} onChange={(e) => handleSkuChange(size, 'packageType', e.target.value)}><option value="Kit">Kit (includes towel, manual, etc.)</option><option value="Bottle">Bottle (standalone)</option></select></div>
+                    <div className="form-group"><label className="form-label">Package Type</label><select className="input-field select-field" value={state.skuDetails[size]?.packageType || ''} onChange={(e) => onSkuChange(size, 'packageType', e.target.value)}><option value="Kit">Kit (includes towel, manual, etc.)</option><option value="Bottle">Bottle (standalone)</option></select></div>
                     <div className="form-grid">
-                      <div className="form-group"><label className="form-label">Price (₹) <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="₹" value={formData.skuDetails[size]?.price || ''} onChange={(e) => handleSkuChange(size, 'price', e.target.value)} required /></div>
-                      <div className="form-group"><label className="form-label">Qty <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="Qty" value={formData.skuDetails[size]?.qty || ''} onChange={(e) => handleSkuChange(size, 'qty', e.target.value)} required /></div>
+                      <div className="form-group"><label className="form-label">Price (₹) <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="₹" value={state.skuDetails[size]?.price || ''} onChange={(e) => onSkuChange(size, 'price', e.target.value)} required /></div>
+                      <div className="form-group"><label className="form-label">Qty <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="Qty" value={state.skuDetails[size]?.qty || ''} onChange={(e) => onSkuChange(size, 'qty', e.target.value)} required /></div>
                     </div>
                   </div>
                 )}
@@ -403,31 +407,31 @@ const ProductForm = () => {
           </div>
         )}
 
-        {formData.productType === 'DIY' && (
+        {state.productType === 'DIY' && (
           <div>
-            {formData.diyType && (() => {
+            {state.diyType && (() => {
               let sizes = ['100ml', '250ml', '500ml', '750ml', '1L', '5L'];
-              if (formData.diyType === 'Microfibre Cloth') sizes = ['1 Piece', '3 Pack', '5 Pack', '10 Pack', 'Other Pack'];
-              else if (formData.diyType.includes('Brush') || formData.diyType.includes('Mitt')) sizes = ['1 Piece', 'Set'];
-              else if (formData.diyType === 'Other') sizes = ['Custom Variant'];
+              if (state.diyType === 'Microfibre Cloth') sizes = ['1 Piece', '3 Pack', '5 Pack', '10 Pack', 'Other Pack'];
+              else if (state.diyType.includes('Brush') || state.diyType.includes('Mitt')) sizes = ['1 Piece', 'Set'];
+              else if (state.diyType === 'Other') sizes = ['Custom Variant'];
               return sizes.map(size => (
                 <div key={size} style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '15px', border: '1px solid var(--card-border)', marginBottom: '1rem' }}>
                   <label className="custom-checkbox" style={{ padding: 0, margin: 0 }}>
-                    <input type="checkbox" style={{ display: 'none' }} checked={formData.skuDetails[`${formData.diyType}-${size}`]?.selected} onChange={(e) => setFormData(prev => ({ ...prev, skuDetails: { ...prev.skuDetails, [`${formData.diyType}-${size}`]: { selected: e.target.checked } } }))} />
+                    <input type="checkbox" style={{ display: 'none' }} checked={state.skuDetails[`${state.diyType}-${size}`]?.selected} onChange={(e) => setState(prev => ({ ...prev, skuDetails: { ...prev.skuDetails, [`${state.diyType}-${size}`]: { selected: e.target.checked } } }))} />
                     <div className="checkbox-visual"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
                     <span className="checkbox-label" style={{ fontWeight: 600 }}>{size}</span>
                   </label>
-                  {formData.skuDetails[`${formData.diyType}-${size}`]?.selected && (
+                  {state.skuDetails[`${state.diyType}-${size}`]?.selected && (
                     <div style={{ marginTop: '1rem', borderTop: '1px solid var(--card-border)', paddingTop: '1rem' }}>
                       <div className="form-grid">
-                        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Price (₹) <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="₹" value={formData.skuDetails[`${formData.diyType}-${size}`]?.price || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'price', e.target.value)} required /></div>
-                        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Qty <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="Qty" value={formData.skuDetails[`${formData.diyType}-${size}`]?.qty || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'qty', e.target.value)} required /></div>
+                        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Price (₹) <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="₹" value={state.skuDetails[`${state.diyType}-${size}`]?.price || ''} onChange={(e) => onSkuChange(`${state.diyType}-${size}`, 'price', e.target.value)} required /></div>
+                        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Qty <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="Qty" value={state.skuDetails[`${state.diyType}-${size}`]?.qty || ''} onChange={(e) => onSkuChange(`${state.diyType}-${size}`, 'qty', e.target.value)} required /></div>
                       </div>
-                      {formData.diyType === 'Other' && (
+                      {state.diyType === 'Other' && (
                         <div className="form-grid" style={{ marginTop: '1rem' }}>
-                          <div className="form-group" style={{ margin: 0 }}><label className="form-label">Measurement / Volume <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="text" placeholder="e.g. 20, 1" value={formData.skuDetails[`${formData.diyType}-${size}`]?.dimension || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'dimension', e.target.value)} required /></div>
+                          <div className="form-group" style={{ margin: 0 }}><label className="form-label">Measurement / Volume <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="text" placeholder="e.g. 20, 1" value={state.skuDetails[`${state.diyType}-${size}`]?.dimension || ''} onChange={(e) => onSkuChange(`${state.diyType}-${size}`, 'dimension', e.target.value)} required /></div>
                           <div className="form-group" style={{ margin: 0 }}><label className="form-label">Unit <span style={{color:'var(--error)'}}>*</span></label>
-                            <select className="input-field select-field" value={formData.skuDetails[`${formData.diyType}-${size}`]?.unit || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'unit', e.target.value)} required>
+                            <select className="input-field select-field" value={state.skuDetails[`${state.diyType}-${size}`]?.unit || ''} onChange={(e) => onSkuChange(`${state.diyType}-${size}`, 'unit', e.target.value)} required>
                               <option value="">Select Unit</option>
                               <option value="ml">ml</option>
                               <option value="L">L</option>
@@ -450,55 +454,60 @@ const ProductForm = () => {
             })()}
           </div>
         )}
+        )}
       </div>
 
-      <div className="button-group">
-        <button className="btn-secondary" onClick={prevStep}>Back</button>
-        <button className="btn-primary" onClick={nextStep} disabled={!isStepValid()}>Next: Media & Logistics</button>
-      </div>
+      {!isModal && (
+        <div className="button-group">
+          <button className="btn-secondary" onClick={prevStep}>Back</button>
+          <button className="btn-primary" onClick={nextStep} disabled={!isStepValid()}>Next: Media & Logistics</button>
+        </div>
+      )}
     </div>
   );
 
-  const renderLogistics = () => (
+  const renderLogistics = (state = formData, onChange = handleInputChange, isModal = false) => (
     <div className="form-section">
       <header className="step-header"><h2 className="step-title">Logistics</h2><p className="step-desc">Finalize the submission with transit and procurement timelines.</p></header>
       
       <div className="form-group">
         <label className="form-label">Product Availability <span style={{color:'var(--error)'}}>*</span></label>
-        <select name="stockStatus" className="input-field select-field" value={formData.stockStatus} onChange={handleInputChange} required>
+        <select name="stockStatus" className="input-field select-field" value={state.stockStatus} onChange={onChange} required>
           <option value="in_stock">In Stock</option>
           <option value="out_of_stock">Out of Stock</option>
         </select>
       </div>
 
       <div className="form-grid">
-        {formData.stockStatus === 'in_stock' && (
+        {state.stockStatus === 'in_stock' && (
           <div className="form-group">
             <label className="form-label">
               Transit (In Stock) <Tooltip title="Transit Timeline" desc="Days to deliver since product is currently in your stock." />
             </label>
-            <input type="number" name="transitDays" className="input-field" placeholder="Days" value={formData.transitDays} onChange={handleInputChange} />
+            <input type="number" name="transitDays" className="input-field" placeholder="Days" value={state.transitDays} onChange={onChange} />
           </div>
         )}
-        {formData.stockStatus === 'out_of_stock' && (
+        {state.stockStatus === 'out_of_stock' && (
           <div className="form-group">
             <label className="form-label">
               Procurement (Out of Stock) <Tooltip title="Backorder Timeline" desc="Days to procure from manufacturer and deliver if out of stock." />
             </label>
-            <input type="number" name="oosDays" className="input-field" placeholder="Days" value={formData.oosDays} onChange={handleInputChange} />
+            <input type="number" name="oosDays" className="input-field" placeholder="Days" value={state.oosDays} onChange={onChange} />
           </div>
         )}
       </div>
       
-      <div className="button-group" style={{ flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ display: 'flex', width: '100%', gap: '1rem' }}>
-          <button className="btn-secondary" style={{ flex: 1 }} onClick={prevStep}>Back</button>
-          <button className="btn-secondary" style={{ flex: 1, borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' }} onClick={handleAddAnotherProduct}>Add Another Product</button>
+      {!isModal && (
+        <div className="button-group" style={{ flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', width: '100%', gap: '1rem' }}>
+            <button className="btn-secondary" style={{ flex: 1 }} onClick={prevStep}>Back</button>
+            <button className="btn-secondary" style={{ flex: 1, borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' }} onClick={handleAddAnotherProduct}>Add Another Product</button>
+          </div>
+          <button className="btn-primary" style={{ background: 'var(--success)', width: '100%' }} onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? 'Submitting...' : 'Complete Submission'}
+          </button>
         </div>
-        <button className="btn-primary" style={{ background: 'var(--success)', width: '100%' }} onClick={handleSubmit} disabled={isSubmitting}>
-          {isSubmitting ? 'Submitting...' : 'Complete Submission'}
-        </button>
-      </div>
+      )}
     </div>
   );
 
@@ -569,6 +578,28 @@ const ProductForm = () => {
           </div>
         </main>
       </div>
+
+      {editingProductIndex !== null && editFormData && (
+        <div className="modal-overlay" onClick={() => { setEditingProductIndex(null); setEditFormData(null); }}>
+          <div className="modal-container" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Edit Product</h2>
+              <button className="modal-close" onClick={() => { setEditingProductIndex(null); setEditFormData(null); }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+              {renderProductIdentification(editFormData, handleEditInputChange, true)}
+              {renderSKUDetails(editFormData, setEditFormData, handleEditSkuChange, true)}
+              {renderLogistics(editFormData, handleEditInputChange, true)}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => { setEditingProductIndex(null); setEditFormData(null); }}>Cancel</button>
+              <button className="btn-primary" onClick={saveEditedProduct} style={{ maxWidth: '200px' }}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
