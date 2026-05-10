@@ -4,6 +4,7 @@ const ProductForm = () => {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [products, setProducts] = useState([]);
   const [formData, setFormData] = useState({
     verification: false,
     supplierName: '',
@@ -22,28 +23,77 @@ const ProductForm = () => {
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => s - 1);
 
+  const handleAddAnotherProduct = () => {
+    const currentProduct = {
+      brandName: formData.brandName,
+      productType: formData.productType,
+      productName: formData.productName,
+      diyType: formData.diyType,
+      diyTypeOther: formData.diyTypeOther,
+      coatingType: formData.coatingType,
+      skuDetails: formData.skuDetails,
+      transitDays: formData.transitDays,
+      oosDays: formData.oosDays
+    };
+    
+    setProducts(prev => [...prev, currentProduct]);
+    
+    setFormData(prev => ({
+      ...prev,
+      brandName: '',
+      productType: '',
+      productName: '',
+      mrp: '',
+      transitDays: '',
+      oosDays: '',
+      skuDetails: {},
+      diyType: '',
+      diyTypeOther: '',
+      coatingType: ''
+    }));
+    
+    setStep(3); // Go back to Product Identity
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     
-    // Flatten selected SKUs into a readable string for Google Sheets
-    const selectedSkus = Object.entries(formData.skuDetails)
-      .filter(([_, s]) => s.selected)
-      .map(([id, s]) => `${id} (Price: ₹${s.price || 0}, Qty: ${s.qty || 0}${s.dimension ? `, Dim: ${s.dimension}${s.unit ? ' ' + s.unit : ''}` : ''})`)
-      .join(' | ');
+    const finalProduct = {
+      brandName: formData.brandName,
+      productType: formData.productType,
+      productName: formData.productName,
+      diyType: formData.diyType,
+      diyTypeOther: formData.diyTypeOther,
+      coatingType: formData.coatingType,
+      skuDetails: formData.skuDetails,
+      transitDays: formData.transitDays,
+      oosDays: formData.oosDays
+    };
+
+    const allProducts = [...products, finalProduct];
 
     const payload = {
       Timestamp: new Date().toLocaleString(),
       SupplierName: formData.supplierName,
       Email: formData.email,
       Phone: formData.phone,
-      BrandName: formData.brandName,
-      Category: formData.productType,
-      ProductName: formData.productName,
-      DIYType: formData.diyType === 'Other' ? `Other: ${formData.diyTypeOther}` : formData.diyType || 'N/A',
-      CoatingType: formData.coatingType || 'N/A',
-      SKUDetails: selectedSkus,
-      TransitDays: formData.transitDays,
-      OOSDays: formData.oosDays
+      Products: allProducts.map(p => {
+        const selectedSkus = Object.entries(p.skuDetails)
+          .filter(([_, s]) => s.selected)
+          .map(([id, s]) => `${id} (Price: ₹${s.price || 0}, Qty: ${s.qty || 0}${s.dimension ? `, Dim: ${s.dimension}${s.unit ? ' ' + s.unit : ''}` : ''})`)
+          .join(' | ');
+
+        return {
+          BrandName: p.brandName,
+          Category: p.productType,
+          ProductName: p.productName,
+          DIYType: p.diyType === 'Other' ? `Other: ${p.diyTypeOther}` : p.diyType || 'N/A',
+          CoatingType: p.coatingType || 'N/A',
+          SKUDetails: selectedSkus,
+          TransitDays: p.transitDays,
+          OOSDays: p.oosDays
+        };
+      })
     };
 
     try {
@@ -355,9 +405,12 @@ const ProductForm = () => {
         </div>
       </div>
       
-      <div className="button-group">
-        <button className="btn-secondary" onClick={prevStep}>Back</button>
-        <button className="btn-primary" style={{ background: 'var(--success)' }} onClick={handleSubmit} disabled={isSubmitting}>
+      <div className="button-group" style={{ flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'flex', width: '100%', gap: '1rem' }}>
+          <button className="btn-secondary" style={{ flex: 1 }} onClick={prevStep}>Back</button>
+          <button className="btn-secondary" style={{ flex: 1, borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' }} onClick={handleAddAnotherProduct}>Add Another Product</button>
+        </div>
+        <button className="btn-primary" style={{ background: 'var(--success)', width: '100%' }} onClick={handleSubmit} disabled={isSubmitting}>
           {isSubmitting ? 'Submitting...' : 'Complete Submission'}
         </button>
       </div>
@@ -398,6 +451,11 @@ const ProductForm = () => {
             <div key={i} className={`progress-pill ${i === step ? 'active' : (i < step ? 'done' : '')}`} />
           ))}
         </div>
+        {products.length > 0 && (
+          <div style={{ marginTop: '1rem', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1.5rem', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-cyan)' }}>
+            Products Ready for Submission: {products.length}
+          </div>
+        )}
       </header>
       <main className="form-container">
         <div className="glass-card">
