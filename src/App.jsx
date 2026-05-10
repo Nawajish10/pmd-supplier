@@ -16,13 +16,8 @@ const ProductForm = () => {
     transitDays: '',
     oosDays: '',
     skuDetails: {},
-    diyType: '',
-    coatingType: ''
+    diyTypeOther: ''
   });
-
-  const [images, setImages] = useState({ photo1: null, photo2: null, photo3: null, photo4: null });
-  const [activeCamera, setActiveCamera] = useState(null);
-  const videoRef = useRef(null);
 
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => s - 1);
@@ -33,7 +28,7 @@ const ProductForm = () => {
     // Flatten selected SKUs into a readable string for Google Sheets
     const selectedSkus = Object.entries(formData.skuDetails)
       .filter(([_, s]) => s.selected)
-      .map(([id, s]) => `${id} (Price: ₹${s.price || 0}, Qty: ${s.qty || 0}${s.dimension ? `, Dim: ${s.dimension}` : ''})`)
+      .map(([id, s]) => `${id} (Price: ₹${s.price || 0}, Qty: ${s.qty || 0}${s.dimension ? `, Dim: ${s.dimension}${s.unit ? ' ' + s.unit : ''}` : ''})`)
       .join(' | ');
 
     const payload = {
@@ -44,7 +39,7 @@ const ProductForm = () => {
       BrandName: formData.brandName,
       Category: formData.productType,
       ProductName: formData.productName,
-      DIYType: formData.diyType || 'N/A',
+      DIYType: formData.diyType === 'Other' ? `Other: ${formData.diyTypeOther}` : formData.diyType || 'N/A',
       CoatingType: formData.coatingType || 'N/A',
       SKUDetails: selectedSkus,
       TransitDays: formData.transitDays,
@@ -102,58 +97,6 @@ const ProductForm = () => {
     return true;
   };
 
-  const handleImageUpload = (slot, e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImages(prev => ({ ...prev, [slot]: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const startCamera = async (slot) => {
-    setActiveCamera(slot);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (err) {
-      console.error("Camera error: ", err);
-      alert("Camera access failed.");
-      setActiveCamera(null);
-    }
-  };
-
-  const capturePhoto = () => {
-    const video = videoRef.current;
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL('image/png');
-    setImages(prev => ({ ...prev, [activeCamera]: dataUrl }));
-    if (video.srcObject) {
-      video.srcObject.getTracks().forEach(track => track.stop());
-    }
-    setActiveCamera(null);
-  };
-
-  const closeCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-    }
-    setActiveCamera(null);
-  };
-
-  const IconUpload = () => (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-  );
 
   const Tooltip = ({ title, desc }) => (
     <div className="tooltip-wrapper">
@@ -181,7 +124,7 @@ const ProductForm = () => {
         <div className="checkbox-visual">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <span className="checkbox-label">I have the product in front of me and am ready to proceed</span>
+        <span className="checkbox-label">I have the product details</span>
       </label>
       <div className="button-group single-btn">
         <button className="btn-primary" disabled={!formData.verification} onClick={nextStep}>
@@ -334,10 +277,17 @@ const ProductForm = () => {
                 {['Car Shampoo', 'Car Wax / Polish (Liquid)', 'Car Wax / Polish (Solid)', 'Glass Cleaner', 'Tyre Shine', 'Dashboard Dresser', 'Quick Detailer', 'Wheel Cleaner', 'Interior Cleaner', 'Tar Remover', 'Leather Conditioner', 'Trim Restorer', 'Microfibre Cloth', 'Clay Bar', 'Foam Mitt', 'Detailing Brush', 'Applicator Pad', 'Engine Degreaser', 'Fabric Protectant', 'Headlight Kit', 'Ceramic DIY Kit', 'Other'].map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
+            {formData.diyType === 'Other' && (
+              <div className="form-group" style={{ marginTop: '1.5rem' }}>
+                <label className="form-label">Specify DIY Type <span style={{color:'var(--error)'}}>*</span></label>
+                <textarea name="diyTypeOther" className="input-field" placeholder="Describe the DIY product..." value={formData.diyTypeOther} onChange={handleInputChange} style={{ height: '80px', paddingTop: '1rem', resize: 'vertical' }} required></textarea>
+              </div>
+            )}
             {formData.diyType && (() => {
               let sizes = ['100ml', '250ml', '500ml', '750ml', '1L', '5L'];
               if (formData.diyType === 'Microfibre Cloth') sizes = ['1 Piece', '3 Pack', '5 Pack', '10 Pack', 'Other Pack'];
               else if (formData.diyType.includes('Brush') || formData.diyType.includes('Mitt')) sizes = ['1 Piece', 'Set'];
+              else if (formData.diyType === 'Other') sizes = ['Custom Variant'];
               return sizes.map(size => (
                 <div key={size} style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '15px', border: '1px solid var(--card-border)', marginBottom: '1rem' }}>
                   <label className="custom-checkbox" style={{ padding: 0, margin: 0 }}>
@@ -346,10 +296,29 @@ const ProductForm = () => {
                     <span className="checkbox-label" style={{ fontWeight: 600 }}>{size}</span>
                   </label>
                   {formData.skuDetails[`${formData.diyType}-${size}`]?.selected && (
-                    <div className="form-grid" style={{ marginTop: '1rem' }}>
-                      <div className="form-group" style={{ margin: 0 }}><label className="form-label">Price (₹) <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="₹" value={formData.skuDetails[`${formData.diyType}-${size}`]?.price || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'price', e.target.value)} required /></div>
-                      <div className="form-group" style={{ margin: 0 }}><label className="form-label">Qty <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="Qty" value={formData.skuDetails[`${formData.diyType}-${size}`]?.qty || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'qty', e.target.value)} required /></div>
-                      <div className="form-group" style={{ margin: 0 }}><label className="form-label">Dimensions <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="text" placeholder="L x W" value={formData.skuDetails[`${formData.diyType}-${size}`]?.dimension || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'dimension', e.target.value)} required /></div>
+                    <div style={{ marginTop: '1rem', borderTop: '1px solid var(--card-border)', paddingTop: '1rem' }}>
+                      <div className="form-grid">
+                        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Price (₹) <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="₹" value={formData.skuDetails[`${formData.diyType}-${size}`]?.price || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'price', e.target.value)} required /></div>
+                        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Qty <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="Qty" value={formData.skuDetails[`${formData.diyType}-${size}`]?.qty || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'qty', e.target.value)} required /></div>
+                      </div>
+                      <div className="form-grid" style={{ marginTop: '1rem' }}>
+                        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Measurement / Volume <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="text" placeholder="e.g. 20, 1" value={formData.skuDetails[`${formData.diyType}-${size}`]?.dimension || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'dimension', e.target.value)} required /></div>
+                        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Unit <span style={{color:'var(--error)'}}>*</span></label>
+                          <select className="input-field select-field" value={formData.skuDetails[`${formData.diyType}-${size}`]?.unit || ''} onChange={(e) => handleSkuChange(`${formData.diyType}-${size}`, 'unit', e.target.value)} required>
+                            <option value="">Select Unit</option>
+                            <option value="ml">ml</option>
+                            <option value="L">L</option>
+                            <option value="g">g</option>
+                            <option value="kg">kg</option>
+                            <option value="meter">meter</option>
+                            <option value="cm">cm</option>
+                            <option value="piece">piece</option>
+                            <option value="pack">pack</option>
+                            <option value="roll">roll</option>
+                            <option value="bottle">bottle</option>
+                          </select>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -368,19 +337,7 @@ const ProductForm = () => {
 
   const renderLogistics = () => (
     <div className="form-section">
-      {activeCamera && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 10000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-          <div style={{ width: '100%', maxWidth: '640px', borderRadius: '30px', overflow: 'hidden', border: '4px solid var(--primary)', position: 'relative' }}>
-            <video ref={videoRef} autoPlay playsInline style={{ width: '100%', transform: 'scaleX(-1)' }} />
-          </div>
-          <div style={{ marginTop: '2rem', display: 'flex', gap: '2rem', alignItems: 'center' }}>
-            <button onClick={closeCamera} className="btn-secondary" style={{ width: 'auto', padding: '0 2.5rem' }}>Cancel</button>
-            <button onClick={capturePhoto} style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'white', border: '8px solid var(--primary)', cursor: 'pointer' }} />
-          </div>
-        </div>
-      )}
-
-      <header className="step-header"><h2 className="step-title">Media & Logistics</h2><p className="step-desc">Finalize the submission with transit timelines and required verification photos.</p></header>
+      <header className="step-header"><h2 className="step-title">Logistics</h2><p className="step-desc">Finalize the submission with transit and procurement timelines.</p></header>
       
       <div className="form-grid">
         <div className="form-group">
@@ -394,36 +351,6 @@ const ProductForm = () => {
             Procurement (OOS) <Tooltip title="Backorder Timeline" desc="Days to procure from manufacturer and deliver if OOS." />
           </label>
           <input type="number" name="oosDays" className="input-field" placeholder="Days" value={formData.oosDays} onChange={handleInputChange} />
-        </div>
-      </div>
-
-      <div className="form-group" style={{ marginTop: '1rem' }}>
-        <label className="form-label" style={{ marginBottom: '1.5rem' }}>Verification Photos (4 Required)</label>
-        <div className="photo-grid">
-          {[
-            { id: 'photo1', label: 'Photo 1', hint: 'Front / Label Side' },
-            { id: 'photo2', label: 'Photo 2', hint: 'Back / Spec Side' },
-            { id: 'photo3', label: 'Photo 3', hint: 'Left Side / Roll End' },
-            { id: 'photo4', label: 'Photo 4', hint: 'Actual Product / Sample' }
-          ].map(slot => (
-            <div key={slot.id} className="photo-slot">
-              <input type="file" id={slot.id} style={{ display: 'none' }} accept="image/*" onChange={(e) => handleImageUpload(slot.id, e)} />
-              {images[slot.id] ? (
-                <div className="photo-preview-container">
-                  <img src={images[slot.id]} alt="Preview" />
-                  <button onClick={() => setImages(prev => ({ ...prev, [slot.id]: null }))} style={{ position: 'absolute', top: '-10px', right: '-10px', background: 'var(--error)', border: 'none', color: 'white', width: '24px', height: '24px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>×</button>
-                </div>
-              ) : (
-                <div className="photo-placeholder"><IconUpload /></div>
-              )}
-              <div style={{ fontSize: '0.85rem', fontWeight: 800, marginBottom: '0.25rem' }}>{slot.label}</div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.4', padding: '0 1rem' }}>{slot.hint}</div>
-              <div style={{ display: 'flex', gap: '0.5rem', padding: '0 0.5rem' }}>
-                <button className="btn-secondary" style={{ flex: 1, height: '40px', fontSize: '0.75rem' }} onClick={() => document.getElementById(slot.id).click()}>Upload</button>
-                <button className="btn-primary" style={{ flex: 1, height: '40px', fontSize: '0.75rem', boxShadow: 'none' }} onClick={() => startCamera(slot.id)}>Capture</button>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
       
