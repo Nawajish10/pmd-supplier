@@ -58,6 +58,30 @@ const ProductForm = () => {
     setStep(3); // Go back to Product Identity
   };
 
+  const handleEditProduct = (index) => {
+    const productToEdit = products[index];
+    if (formData.brandName.trim() !== '') {
+      if (!window.confirm("You have unsaved changes for the current product. Are you sure you want to edit a queued product? Your current progress will be lost.")) {
+        return;
+      }
+    }
+    setFormData(prev => ({
+      ...prev,
+      brandName: productToEdit.brandName,
+      productType: productToEdit.productType,
+      productName: productToEdit.productName,
+      diyType: productToEdit.diyType,
+      diyTypeOther: productToEdit.diyTypeOther,
+      coatingType: productToEdit.coatingType,
+      skuDetails: productToEdit.skuDetails,
+      stockStatus: productToEdit.stockStatus,
+      transitDays: productToEdit.transitDays,
+      oosDays: productToEdit.oosDays
+    }));
+    setProducts(prev => prev.filter((_, i) => i !== index));
+    setStep(3);
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     
@@ -512,21 +536,39 @@ const ProductForm = () => {
             <div key={i} className={`progress-pill ${i === step ? 'active' : (i < step ? 'done' : '')}`} />
           ))}
         </div>
-        {products.length > 0 && (
-          <div style={{ marginTop: '1rem', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1.5rem', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-cyan)' }}>
-            Products Ready for Submission: {products.length}
-          </div>
-        )}
       </header>
-      <main className="form-container">
-        <div className="glass-card">
-          {step === 1 && renderVerification()}
-          {step === 2 && renderSupplierInfo()}
-          {step === 3 && renderProductIdentification()}
-          {step === 4 && renderSKUDetails()}
-          {step === 5 && renderLogistics()}
-        </div>
-      </main>
+      
+      <div style={{ display: 'flex', gap: '2rem', width: '100%', maxWidth: products.length > 0 ? '1200px' : '640px', transition: 'max-width 0.3s ease' }}>
+        {products.length > 0 && (
+          <aside style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', gap: '1rem', animation: 'stepFadeIn 0.4s ease-out' }}>
+            <h3 style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0, paddingLeft: '0.5rem' }}>Queued Products ({products.length})</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '600px', overflowY: 'auto', paddingRight: '0.5rem' }} className="sku-logic-scroll">
+              {products.map((p, idx) => (
+                <div key={idx} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '1.25rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                    <span style={{ background: 'var(--accent-cyan)', color: '#000', fontSize: '0.7rem', fontWeight: 800, padding: '0.25rem 0.5rem', borderRadius: '4px' }}>{p.productType}</span>
+                    <button style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem', padding: 0 }} onClick={() => handleEditProduct(idx)}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit
+                    </button>
+                  </div>
+                  <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff', marginBottom: '0.25rem' }}>{p.brandName}</div>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{p.productType === 'DIY' ? p.diyType : (p.productType === 'Coating' ? p.coatingType : p.productName)}</div>
+                </div>
+              ))}
+            </div>
+          </aside>
+        )}
+        
+        <main className="form-container" style={{ flex: 1, margin: 0, maxWidth: '100%' }}>
+          <div className="glass-card">
+            {step === 1 && renderVerification()}
+            {step === 2 && renderSupplierInfo()}
+            {step === 3 && renderProductIdentification()}
+            {step === 4 && renderSKUDetails()}
+            {step === 5 && renderLogistics()}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
