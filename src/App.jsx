@@ -83,7 +83,7 @@ const ProductForm = () => {
       Phone: formData.phone,
       Products: allProducts.map(p => {
         const selectedSkus = Object.entries(p.skuDetails)
-          .filter(([id, s]) => id === 'PPF-Roll' ? s.selected !== false : s.selected)
+          .filter(([id, s]) => p.productType === 'PPF' ? true : s.selected)
           .map(([id, s]) => `${id} (Price: ₹${s.price || 0}, Qty: ${s.qty || 0}${s.dimension ? `, Dim: ${s.dimension}${s.unit ? ' ' + s.unit : ''}` : ''}${s.length ? `, Dim: ${s.length}${s.lengthUnit || ''} x ${s.width || ''}${s.widthUnit || ''}` : ''}${s.packageType ? `, Pkg: ${s.packageType}` : ''})`)
           .join(' | ');
 
@@ -159,7 +159,7 @@ const ProductForm = () => {
     if (step === 4) {
       if (formData.productType === 'PPF') {
         const ppf = formData.skuDetails['PPF-Roll'];
-        if (!ppf || ppf.selected === false) return false;
+        if (!ppf) return false;
         return !!(ppf.price && ppf.qty);
       }
       const selectedSkus = Object.entries(formData.skuDetails).filter(([_, s]) => s.selected);
@@ -281,27 +281,19 @@ const ProductForm = () => {
         
         {formData.productType === 'PPF' && (
           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--card-border)' }}>
-            <label className="custom-checkbox" style={{ padding: 0, marginBottom: '2rem' }}>
-              <input type="checkbox" style={{ display: 'none' }} checked={formData.skuDetails['PPF-Roll']?.selected !== false} onChange={(e) => setFormData(prev => ({ ...prev, skuDetails: { ...prev.skuDetails, 'PPF-Roll': { ...prev.skuDetails['PPF-Roll'], selected: e.target.checked } } }))} />
-              <div className="checkbox-visual"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-              <span className="checkbox-label" style={{ fontWeight: 700, fontSize: '1.25rem', color: '#fff' }}>Full Roll [Optional]</span>
-            </label>
-            {formData.skuDetails['PPF-Roll']?.selected !== false && (
-              <>
-                <div className="form-grid">
-                  <div className="form-group"><label className="form-label">Length</label><input className="input-field" type="number" placeholder="Value" value={formData.skuDetails['PPF-Roll']?.length || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'length', e.target.value)} /></div>
-                  <div className="form-group"><label className="form-label">Unit</label><select className="input-field select-field" value={formData.skuDetails['PPF-Roll']?.lengthUnit || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'lengthUnit', e.target.value)}><option value="">Select</option>{units.map(u => <option key={u} value={u}>{u}</option>)}</select></div>
-                </div>
-                <div className="form-grid">
-                  <div className="form-group"><label className="form-label">Width</label><input className="input-field" type="number" placeholder="Value" value={formData.skuDetails['PPF-Roll']?.width || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'width', e.target.value)} /></div>
-                  <div className="form-group"><label className="form-label">Unit</label><select className="input-field select-field" value={formData.skuDetails['PPF-Roll']?.widthUnit || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'widthUnit', e.target.value)}><option value="">Select</option>{units.map(u => <option key={u} value={u}>{u}</option>)}</select></div>
-                </div>
-                <div className="form-grid">
-                  <div className="form-group"><label className="form-label">Price to PMD (₹) <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="₹" value={formData.skuDetails['PPF-Roll']?.price || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'price', e.target.value)} required /></div>
-                  <div className="form-group"><label className="form-label">Qty in Stock <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="Qty" value={formData.skuDetails['PPF-Roll']?.qty || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'qty', e.target.value)} required /></div>
-                </div>
-              </>
-            )}
+            <h3 style={{ margin: '0 0 1.5rem 0', color: '#fff', fontSize: '1.25rem' }}>Full Roll Configuration</h3>
+            <div className="form-grid">
+              <div className="form-group"><label className="form-label">Length</label><input className="input-field" type="number" placeholder="Value" value={formData.skuDetails['PPF-Roll']?.length || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'length', e.target.value)} /></div>
+              <div className="form-group"><label className="form-label">Unit</label><select className="input-field select-field" value={formData.skuDetails['PPF-Roll']?.lengthUnit || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'lengthUnit', e.target.value)}><option value="">Select</option>{units.map(u => <option key={u} value={u}>{u}</option>)}</select></div>
+            </div>
+            <div className="form-grid">
+              <div className="form-group"><label className="form-label">Width</label><input className="input-field" type="number" placeholder="Value" value={formData.skuDetails['PPF-Roll']?.width || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'width', e.target.value)} /></div>
+              <div className="form-group"><label className="form-label">Unit</label><select className="input-field select-field" value={formData.skuDetails['PPF-Roll']?.widthUnit || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'widthUnit', e.target.value)}><option value="">Select</option>{units.map(u => <option key={u} value={u}>{u}</option>)}</select></div>
+            </div>
+            <div className="form-grid">
+              <div className="form-group"><label className="form-label">Price to PMD (₹) <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="₹" value={formData.skuDetails['PPF-Roll']?.price || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'price', e.target.value)} required /></div>
+              <div className="form-group"><label className="form-label">Qty in Stock <span style={{color:'var(--error)'}}>*</span></label><input className="input-field" type="number" placeholder="Qty" value={formData.skuDetails['PPF-Roll']?.qty || ''} onChange={(e) => handleSkuChange('PPF-Roll', 'qty', e.target.value)} required /></div>
+            </div>
           </div>
         )}
 
